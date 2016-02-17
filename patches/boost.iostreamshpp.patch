@@ -1,0 +1,198 @@
+diff --git a/include/boost/iostreams/code_converter.hpp b/include/boost/iostreams/code_converter.hpp
+index 7ac2ff3..0917847 100644
+--- a/include/boost/iostreams/code_converter.hpp
++++ b/include/boost/iostreams/code_converter.hpp
+@@ -154,13 +154,13 @@ struct code_converter_impl {
+     }
+ 
+     template <class T>
+-    void open(const T& dev, int buffer_size)
++    void open(const T& dev, std::streamsize buffer_size)
+     {
+         if (flags_ & f_open)
+             boost::throw_exception(BOOST_IOSTREAMS_FAILURE("already open"));
+         if (buffer_size == -1)
+             buffer_size = default_filter_buffer_size;
+-        int max_length = cvt_.get().max_length();
++        std::streamsize max_length = cvt_.get().max_length();
+         buffer_size = (std::max)(buffer_size, 2 * max_length);
+         if (can_read::value) {
+             buf_.first().resize(buffer_size);
+@@ -223,7 +223,7 @@ struct code_converter_impl {
+ 
+ //--------------Definition of converter---------------------------------------//
+ 
+-#define BOOST_IOSTREAMS_CONVERTER_PARAMS() , int buffer_size = -1
++#define BOOST_IOSTREAMS_CONVERTER_PARAMS() , std::streamsize buffer_size = -1
+ #define BOOST_IOSTREAMS_CONVERTER_ARGS() , buffer_size
+ 
+ template<typename Device, typename Codecvt, typename Alloc>
+diff --git a/include/boost/iostreams/filter/bzip2.hpp b/include/boost/iostreams/filter/bzip2.hpp
+index bc4b18f..10abd52 100644
+--- a/include/boost/iostreams/filter/bzip2.hpp
++++ b/include/boost/iostreams/filter/bzip2.hpp
+@@ -246,7 +246,7 @@ public:
+     typedef typename base_type::char_type               char_type;
+     typedef typename base_type::category                category;
+     basic_bzip2_compressor( const bzip2_params& = bzip2::default_block_size, 
+-                            int buffer_size =  default_device_buffer_size );
++                            std::streamsize buffer_size =  default_device_buffer_size );
+ };
+ BOOST_IOSTREAMS_PIPABLE(basic_bzip2_compressor, 1)
+ 
+@@ -268,7 +268,7 @@ public:
+     typedef typename base_type::char_type               char_type;
+     typedef typename base_type::category                category;
+     basic_bzip2_decompressor( bool small = bzip2::default_small,
+-                              int buffer_size = default_device_buffer_size );
++                              std::streamsize buffer_size = default_device_buffer_size );
+ };
+ BOOST_IOSTREAMS_PIPABLE(basic_bzip2_decompressor, 1)
+ 
+@@ -390,7 +390,7 @@ inline void bzip2_decompressor_impl<Alloc>::init()
+ 
+ template<typename Alloc>
+ basic_bzip2_compressor<Alloc>::basic_bzip2_compressor
+-        (const bzip2_params& p, int buffer_size) 
++        (const bzip2_params& p, std::streamsize buffer_size) 
+     : base_type(buffer_size, p) 
+     { }
+ 
+@@ -398,7 +398,7 @@ basic_bzip2_compressor<Alloc>::basic_bzip2_compressor
+ 
+ template<typename Alloc>
+ basic_bzip2_decompressor<Alloc>::basic_bzip2_decompressor
+-        (bool small, int buffer_size) 
++        (bool small, std::streamsize buffer_size) 
+     : base_type(buffer_size, small)
+     { }
+ 
+diff --git a/include/boost/iostreams/filter/gzip.hpp b/include/boost/iostreams/filter/gzip.hpp
+index 0f483b4..c7f0b7e 100644
+--- a/include/boost/iostreams/filter/gzip.hpp
++++ b/include/boost/iostreams/filter/gzip.hpp
+@@ -194,7 +194,7 @@ public:
+           closable_tag
+         { };
+     basic_gzip_compressor( const gzip_params& = gzip::default_compression,
+-                           int buffer_size = default_device_buffer_size );
++                           std::streamsize buffer_size = default_device_buffer_size );
+ 
+     template<typename Source>
+     std::streamsize read(Source& src, char_type* s, std::streamsize n)
+@@ -411,7 +411,7 @@ public:
+           closable_tag
+         { };
+     basic_gzip_decompressor( int window_bits = gzip::default_window_bits,
+-                             int buffer_size = default_device_buffer_size );
++                             std::streamsize buffer_size = default_device_buffer_size );
+ 
+     template<typename Sink>
+     std::streamsize write(Sink& snk, const char_type* s, std::streamsize n)
+@@ -645,7 +645,7 @@ typedef basic_gzip_decompressor<> gzip_decompressor;
+ 
+ template<typename Alloc>
+ basic_gzip_compressor<Alloc>::basic_gzip_compressor
+-    (const gzip_params& p, int buffer_size)
++    (const gzip_params& p, std::streamsize buffer_size)
+     : base_type(normalize_params(p), buffer_size),
+       offset_(0), flags_(0)
+ {
+@@ -731,7 +731,7 @@ std::streamsize basic_gzip_compressor<Alloc>::read_string
+ 
+ template<typename Alloc>
+ basic_gzip_decompressor<Alloc>::basic_gzip_decompressor
+-    (int window_bits, int buffer_size)
++    (int window_bits, std::streamsize buffer_size)
+     : base_type(make_params(window_bits), buffer_size),
+       state_(s_start)
+     { }
+diff --git a/include/boost/iostreams/filter/symmetric.hpp b/include/boost/iostreams/filter/symmetric.hpp
+index cc92b0c..53f1e8b 100644
+--- a/include/boost/iostreams/filter/symmetric.hpp
++++ b/include/boost/iostreams/filter/symmetric.hpp
+@@ -85,7 +85,7 @@ public:
+     #define BOOST_PP_LOCAL_MACRO(n) \
+         BOOST_IOSTREAMS_TEMPLATE_PARAMS(n, T) \
+         explicit symmetric_filter( \
+-              int buffer_size BOOST_PP_COMMA_IF(n) \
++              std::streamsize buffer_size BOOST_PP_COMMA_IF(n) \
+               BOOST_PP_ENUM_BINARY_PARAMS(n, const T, &t) ) \
+             : pimpl_(new impl(buffer_size BOOST_PP_COMMA_IF(n) \
+                      BOOST_PP_ENUM_PARAMS(n, t))) \
+@@ -252,7 +252,7 @@ private:
+     // Expands to a sequence of ctors which forward to SymmetricFilter.
+     #define BOOST_PP_LOCAL_MACRO(n) \
+         BOOST_IOSTREAMS_TEMPLATE_PARAMS(n, T) \
+-        impl( int buffer_size BOOST_PP_COMMA_IF(n) \
++        impl( std::streamsize buffer_size BOOST_PP_COMMA_IF(n) \
+               BOOST_PP_ENUM_BINARY_PARAMS(n, const T, &t) ) \
+             : SymmetricFilter(BOOST_PP_ENUM_PARAMS(n, t)), \
+               buf_(buffer_size), state_(0) \
+diff --git a/include/boost/iostreams/filter/zlib.hpp b/include/boost/iostreams/filter/zlib.hpp
+index b0327f3..a9c8d3e 100644
+--- a/include/boost/iostreams/filter/zlib.hpp
++++ b/include/boost/iostreams/filter/zlib.hpp
+@@ -267,7 +267,7 @@ public:
+     typedef typename base_type::char_type               char_type;
+     typedef typename base_type::category                category;
+     basic_zlib_compressor( const zlib_params& = zlib::default_compression, 
+-                           int buffer_size = default_device_buffer_size );
++                           std::streamsize buffer_size = default_device_buffer_size );
+     zlib::ulong crc() { return this->filter().crc(); }
+     int total_in() {  return this->filter().total_in(); }
+ };
+@@ -291,9 +291,9 @@ public:
+     typedef typename base_type::char_type               char_type;
+     typedef typename base_type::category                category;
+     basic_zlib_decompressor( int window_bits = zlib::default_window_bits,
+-                             int buffer_size = default_device_buffer_size );
++                             std::streamsize buffer_size = default_device_buffer_size );
+     basic_zlib_decompressor( const zlib_params& p,
+-                             int buffer_size = default_device_buffer_size );
++                             std::streamsize buffer_size = default_device_buffer_size );
+     zlib::ulong crc() { return this->filter().crc(); }
+     int total_out() {  return this->filter().total_out(); }
+     bool eof() { return this->filter().eof(); }
+@@ -351,7 +351,7 @@ bool zlib_compressor_impl<Alloc>::filter
+     int result = xdeflate(flush ? zlib::finish : zlib::no_flush);
+     after(src_begin, dest_begin, true);
+     zlib_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(result);
+-    return result != zlib::stream_end; 
++    return result == zlib::okay; 
+ }
+ 
+ template<typename Alloc>
+@@ -385,7 +385,8 @@ bool zlib_decompressor_impl<Alloc>::filter
+     int result = xinflate(zlib::sync_flush);
+     after(src_begin, dest_begin, false);
+     zlib_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(result);
+-    return !(eof_ = result == zlib::stream_end);
++    eof_ = result == zlib::stream_end;
++    return result == zlib::okay;
+ }
+ 
+ template<typename Alloc>
+@@ -400,19 +401,19 @@ void zlib_decompressor_impl<Alloc>::close() {
+ 
+ template<typename Alloc>
+ basic_zlib_compressor<Alloc>::basic_zlib_compressor
+-    (const zlib_params& p, int buffer_size) 
++    (const zlib_params& p, std::streamsize buffer_size) 
+     : base_type(buffer_size, p) { }
+ 
+ //------------------Implementation of zlib_decompressor-----------------------//
+ 
+ template<typename Alloc>
+ basic_zlib_decompressor<Alloc>::basic_zlib_decompressor
+-    (int window_bits, int buffer_size) 
++    (int window_bits, std::streamsize buffer_size) 
+     : base_type(buffer_size, window_bits) { }
+ 
+ template<typename Alloc>
+ basic_zlib_decompressor<Alloc>::basic_zlib_decompressor
+-    (const zlib_params& p, int buffer_size) 
++    (const zlib_params& p, std::streamsize buffer_size) 
+     : base_type(buffer_size, p) { }
+ 
+ //----------------------------------------------------------------------------//

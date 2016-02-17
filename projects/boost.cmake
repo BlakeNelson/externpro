@@ -36,6 +36,8 @@ function(patch_boost)
   xpPatch(${PRO_BOOST})
   xpPatch(${PRO_BOOSTCONFIG})
   xpPatch(${PRO_BOOSTGIL})
+  xpPatch(${PRO_BOOSTIOSTREAMS})
+  xpPatch(${PRO_BOOSTIOSTREAMSHPP})
   xpPatch(${PRO_BOOSTLOG})
   xpPatch(${PRO_BOOSTMPL})
   xpPatch(${PRO_BOOSTUNITS})
@@ -57,6 +59,8 @@ function(build_boost)
     # patched submodules
     boostconfig
     boostgil
+    boostiostreams
+    boostiostreamshpp
     boostlog
     boostmpl
     boostunits
